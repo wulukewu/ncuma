@@ -1,0 +1,31 @@
+name: Run ncuma
+
+on:
+  schedule:
+    - cron: '0/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run-crawler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install --upgrade pip
+             pip install -r requirements.txt
+             pip install webdriver-manager selenium
+             pip install undetected-chromedriver
+             pip install chromedriver-py
+             pip install pyarrow
+
+      - name: Run ncuma
+        run: python main.py
+        env: 
+          LINE_NOTIFY_ID: ${{ secrets.LINE_NOTIFY_ID }}
+          GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+          GS_CREDENTIALS: ${{ secrets.GS_CREDENTIALS }}
