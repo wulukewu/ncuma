@@ -22,6 +22,7 @@ jobs:
           pip install webdriver-manager selenium
           pip install undetected-chromedriver
           pip install chromedriver-py
+          pip install webdriver-manager
           pip install pyarrow
 
       - name: Run ncuma
