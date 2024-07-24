@@ -14,7 +14,7 @@ import json
 
 # ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-# Variables - GitHub
+Variables - GitHub
 line_notify_id = os.environ['LINE_NOTIFY_ID']
 sheet_key = os.environ['GOOGLE_SHEETS_KEY']
 gs_credentials = os.environ['GS_CREDENTIALS']
@@ -191,7 +191,7 @@ def main(url, category, card):
         # 打開公告詳細頁面
         driver.get(link)
         driver.implicitly_wait(10)
-        
+
         # 抓取詳細頁面的 HTML 並打印
         detailed_page_html = driver.page_source
         # print("詳細頁面HTML:")
