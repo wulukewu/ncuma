@@ -2,6 +2,7 @@ from selenium import webdriver
 from chromedriver_py import binary_path
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 import re
 from bs4 import BeautifulSoup
 import requests
@@ -128,7 +129,8 @@ def main(url, category, card):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
 
-    service = Service(binary_path)
+    # service = Service(binary_path)
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     driver.get(url)
 
