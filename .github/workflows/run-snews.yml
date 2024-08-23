@@ -2,7 +2,7 @@ name: Run ncuma
 
 on:
   schedule:
-    - cron: '0/30 * * * *'
+    - cron: '0/5 * * * *'
   workflow_dispatch:
 
 jobs:
