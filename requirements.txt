@@ -1,6 +1,11 @@
 requests
 beautifulsoup4
+webdriver-manager
+undetected-chromedriver
+chromedriver-py
+pyarrow
 selenium
 pandas
 gspread
 google-auth
+discord

@@ -9,6 +9,7 @@ import requests
 import datetime
 from google.oauth2.service_account import Credentials
 import gspread
+import discord
 import pandas as pd
 import os
 import json
@@ -17,6 +18,9 @@ import json
 
 # Variables - GitHub
 line_notify_id = os.environ['LINE_NOTIFY_ID']
+discord_token = os.environ['DISCORD_TOKEN']
+discord_guild_id = int(os.environ['DISCORD_GUILD_ID'])
+discord_channel_id = int(os.environ['DISCORD_CHANNEL_ID'])
 sheet_key = os.environ['GOOGLE_SHEETS_KEY']
 gs_credentials = os.environ['GS_CREDENTIALS']
 service = Service(ChromeDriverManager().install())
@@ -77,8 +81,8 @@ def get_content(url):
 
 text_limit = 1000-20
 
-# LINE Notify
-def LINE_Notify(category, date, title, link, content):
+# Process message
+def Process_Message(category, date, title, link, content):
 
   send_info_1 = f'【{category}】{title}\n⦾發佈日期：{date}'
   send_info_2 = f'⦾內容：' if content != '' else ''
@@ -91,17 +95,37 @@ def LINE_Notify(category, date, title, link, content):
     params_message = f'{send_info_1}\n{send_info_2}{content}\n{send_info_3}'
   else:
     params_message = f'{send_info_1}\n{send_info_3}'
+  
+  return params_message
 
-  for LINE_Notify_ID in LINE_Notify_IDs:
-    headers = {
-            'Authorization': 'Bearer ' + LINE_Notify_ID,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    params = {'message': params_message}
+# LINE Notify
+def LINE_Notify(message, LINE_Notify_ID):
 
-    r = requests.post('https://notify-api.line.me/api/notify',
-                            headers=headers, params=params)
-    print(r.status_code)  #200
+  headers = {
+          'Authorization': 'Bearer ' + LINE_Notify_ID,
+          'Content-Type': 'application/x-www-form-urlencoded'
+      }
+  params = {'message': message}
+
+  r = requests.post('https://notify-api.line.me/api/notify',
+                          headers=headers, params=params)
+  print(r.status_code)  #200
+
+# Discord 發送
+def dc_send(message, token, guild_id, channel_id):
+
+    intents = discord.Intents.default()
+    client = discord.Client(intents=intents)
+
+    @client.event
+    async def on_ready():
+        print(f'We have logged in as {client.user}')
+        guild = discord.utils.get(client.guilds, id=guild_id)
+        channel = discord.utils.get(guild.channels, id=channel_id)
+        await channel.send(message)
+        await client.close()
+
+    client.run(token)
 
 # Google Sheets 紀錄
 scope = ['https://www.googleapis.com/auth/spreadsheets']
@@ -250,9 +274,16 @@ def main(url, category, card):
           # 更新links列表
           links.append(link)
 
+          # 處理訊息
+          params_message = Process_Message(category, date, title, link, content)
+          
           # 傳送至LINE Notify
           print(f'Sent: {link}', end=' ')
-          LINE_Notify(category, date, title, link, content)
+          for LINE_Notify_ID in LINE_Notify_IDs:
+              LINE_Notify(params_message, LINE_Notify_ID)
+
+          # 傳送至Discord
+          dc_send(params_message, discord_token, discord_guild_id, discord_channel_id)
 
         # 刪除nid
         del link
@@ -268,7 +299,13 @@ urls = [
 if __name__ == "__main__":
 
   # 刷新Google Sheets表格
-  google_sheets_refresh()
+  google_sheets_refresh_retry_limit = 3
+  for _ in range(google_sheets_refresh_retry_limit):
+    try:
+      google_sheets_refresh()
+      break
+    except Exception as e:
+      print(f'google_sheets_refresh error: {e}\nretrying...')
 
   # 取得Google Sheets nids列表
   _links = df[4].tolist()
@@ -311,8 +348,8 @@ if __name__ == "__main__":
         print(f'error : {url}')
 
   if len(error_links) == 0:
-    print("--------------------------------------------------\nAll Finished Successfully. ")
+    print(f"{'-'*50}\nAll Finished Successfully. ")
   else:
-    print(f"--------------------------------------------------\nAll Finished, Here Are All The Links That Cannot Be Sent Successfully. ({len(error_links)} files)")
+    print(f"{'-'*50}\nAll Finished, Here Are All The Links That Cannot Be Sent Successfully. ({len(error_links)} files)")
     for error_link in error_links:
       print(error_link)
