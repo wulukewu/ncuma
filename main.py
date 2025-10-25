@@ -9,7 +9,6 @@ import requests
 import datetime
 from google.oauth2.service_account import Credentials
 import gspread
-import discord
 import pandas as pd
 import os
 import json
@@ -18,9 +17,7 @@ import json
 
 # Variables - GitHub
 line_notify_id = os.environ['LINE_NOTIFY_ID']
-discord_token = os.environ['DISCORD_TOKEN']
-discord_guild_id = int(os.environ['DISCORD_GUILD_ID'])
-discord_channel_id = int(os.environ['DISCORD_CHANNEL_ID'])
+discord_webhook_url = os.environ['DISCORD_WEBHOOK_URL']
 sheet_key = os.environ['GOOGLE_SHEETS_KEY']
 gs_credentials = os.environ['GS_CREDENTIALS']
 service = Service(ChromeDriverManager().install())
@@ -112,20 +109,21 @@ def LINE_Notify(message, LINE_Notify_ID):
   print(r.status_code)  #200
 
 # Discord 發送
-def dc_send(message, token, guild_id, channel_id):
+def dc_send(message, webhook_url):
+    payload = {
+        "content": message
+    }
 
-    intents = discord.Intents.default()
-    client = discord.Client(intents=intents)
+    headers = {
+        "Content-Type": "application/json"
+    }
 
-    @client.event
-    async def on_ready():
-        print(f'We have logged in as {client.user}')
-        guild = discord.utils.get(client.guilds, id=guild_id)
-        channel = discord.utils.get(guild.channels, id=channel_id)
-        await channel.send(message)
-        await client.close()
-
-    client.run(token)
+    try:
+        response = requests.post(webhook_url, data=json.dumps(payload), headers=headers)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+        print(f"Message sent successfully! Status Code: {response.status_code}")
+    except requests.exceptions.RequestException as err:
+        print(f"An error occurred: {err}")
 
 # Google Sheets 紀錄
 scope = ['https://www.googleapis.com/auth/spreadsheets']
@@ -283,7 +281,7 @@ def main(url, category, card):
           #     LINE_Notify(params_message, LINE_Notify_ID)
 
           # 傳送至Discord
-          dc_send(params_message, discord_token, discord_guild_id, discord_channel_id)
+          dc_send(params_message, discord_webhook_url)
 
         # 刪除nid
         del link
