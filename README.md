@@ -35,7 +35,7 @@ Actions → I understand my workflows, go ahead and enable them → Enable workf
 
 
 #### [Discord Developer Portal](https://discord.com/developers/applications)
-2. <code>DISCORD_TOKEN</code>、<code>DISCORD_GUILD_ID</code>、<code>DISCORD_CHANNEL_ID</code>：邀請BOT至群組內，並取得BOT的`DISCORD_TOKEN`及群組的`DISCORD_GUILD_ID`、`DISCORD_CHANNEL_ID`。
+2. `DISCORD_WEBHOOK_URL`：請在Discord伺服器中建立一個Webhook，並複製其URL。
 
 
 #### [新增Google Sheets模版](https://lihi.cc/y0vet)
